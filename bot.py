@@ -8,7 +8,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 # Telegram bot token and webhook URL
 TELEGRAM_TOKEN = '7342846547:AAE4mQ4OiMmEyYYwc8SPbN1u3Cf2idfCcxw'
-WEBHOOK_URL = 'https://tradebot-5390.onrender.com/' + TELEGRAM_TOKEN
+WEBHOOK_URL = 'https://pythonzapre.onrender.com/' + TELEGRAM_TOKEN
 
 # PostgreSQL database URL
 DATABASE_URL = 'postgresql://users_info_6gu3_user:RFH4r8MZg0bMII5ruj5Gly9fwdTLAfSV@dpg-cr6vbghu0jms73ffc840-a/users_info_6gu3'
@@ -96,12 +96,13 @@ def verify_password(username, password):
 
 # Set up webhook
 def set_webhook():
-    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}'
-    requests.get(url)
+    response = requests.get(f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}')
+    print("Webhook set response:", response.json())  # Debug: Print the response from Telegram API
 
 @app.route(f'/{TELEGRAM_TOKEN}', methods=['POST'])
 def webhook():
     update = request.get_json()
+    print("Received update:", update)  # Debug: Print the incoming update
     application.update_queue.put(Update.de_json(update, bot))
     return 'OK'
 
@@ -110,5 +111,5 @@ if __name__ == '__main__':
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    set_webhook()
+    set_webhook()  # Set the webhook when the application starts
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
