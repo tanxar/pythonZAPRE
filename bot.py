@@ -4,7 +4,7 @@ import logging
 import requests
 from flask import Flask, request
 from telegram import Update, Bot
-from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext, Dispatcher
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Telegram bot token and webhook URL
 TELEGRAM_TOKEN = '7342846547:AAE4mQ4OiMmEyYYwc8SPbN1u3Cf2idfCcxw'
@@ -23,49 +23,49 @@ def get_db_connection():
     return conn
 
 # Handle /start command
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: CallbackContext):
     keyboard = [['Create account'], ['Login']]
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-    update.message.reply_text('Welcome! Please choose an option:', reply_markup=reply_markup)
+    await update.message.reply_text('Welcome! Please choose an option:', reply_markup=reply_markup)
 
 # Handle user responses
-def handle_message(update: Update, context: CallbackContext):
+async def handle_message(update: Update, context: CallbackContext):
     text = update.message.text
 
     user_data = context.user_data
 
     if text == 'Create account':
         user_data['state'] = 'choosing_username'
-        update.message.reply_text('Please choose a username:')
+        await update.message.reply_text('Please choose a username:')
     elif text == 'Login':
         user_data['state'] = 'login_username'
-        update.message.reply_text('Please enter your username:')
+        await update.message.reply_text('Please enter your username:')
     elif user_data.get('state') == 'choosing_username':
         if not is_username_taken(text):
             user_data['username'] = text
             user_data['state'] = 'choosing_password'
-            update.message.reply_text('Username available. Please choose a password:')
+            await update.message.reply_text('Username available. Please choose a password:')
         else:
-            update.message.reply_text('Username taken. Please choose another username:')
+            await update.message.reply_text('Username taken. Please choose another username:')
     elif user_data.get('state') == 'choosing_password':
         create_account(user_data['username'], text)
-        update.message.reply_text('Account created successfully!')
+        await update.message.reply_text('Account created successfully!')
         user_data.clear()
-        start(update, context)
+        await start(update, context)
     elif user_data.get('state') == 'login_username':
         if is_username_taken(text):
             user_data['username'] = text
             user_data['state'] = 'login_password'
-            update.message.reply_text('Username found. Please enter your password:')
+            await update.message.reply_text('Username found. Please enter your password:')
         else:
-            update.message.reply_text('Username does not exist. Please enter your username again:')
+            await update.message.reply_text('Username does not exist. Please enter your username again:')
     elif user_data.get('state') == 'login_password':
         if verify_password(user_data['username'], text):
-            update.message.reply_text('Login successful!')
+            await update.message.reply_text('Login successful!')
         else:
-            update.message.reply_text('Username or password incorrect. Please try again:')
+            await update.message.reply_text('Username or password incorrect. Please try again:')
         user_data.clear()
-        start(update, context)
+        await start(update, context)
 
 # Helper functions for database operations
 def is_username_taken(username):
@@ -102,13 +102,13 @@ def set_webhook():
 @app.route(f'/{TELEGRAM_TOKEN}', methods=['POST'])
 def webhook():
     update = request.get_json()
-    dispatcher.process_update(Update.de_json(update, bot))
+    application.update_queue.put(Update.de_json(update, bot))
     return 'OK'
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-    dispatcher = Dispatcher(bot, None, workers=0)
-    dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     set_webhook()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
