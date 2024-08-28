@@ -4,8 +4,7 @@ import logging
 import requests
 from flask import Flask, request
 from telegram import Update, Bot
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, Dispatcher
-from telegram.ext import CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Updated Telegram bot token and webhook URL
 TELEGRAM_TOKEN = '7542765454:AAG4dTJYB7e5N73wCfjtAcwe4bCb6bWiHdM'
@@ -108,13 +107,12 @@ def home():
 def webhook():
     update = request.get_json()
     print("Received update:", update)  # Debug print
-    dispatcher.process_update(Update.de_json(update, bot))  # Process the update
+    application.process_update(Update.de_json(update, bot))  # Process the update
     return 'OK'
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
     application = Application.builder().token(TELEGRAM_TOKEN).build()
-    dispatcher = application.dispatcher
     application.add_handler(CommandHandler('start', start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     set_webhook()  # Set the webhook when the application starts
