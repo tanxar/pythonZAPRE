@@ -6,8 +6,8 @@ from flask import Flask, request
 from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
-# Telegram bot token and webhook URL
-TELEGRAM_TOKEN = '7342846547:AAE4mQ4OiMmEyYYwc8SPbN1u3Cf2idfCcxw'
+# Updated Telegram bot token and webhook URL
+TELEGRAM_TOKEN = '7542765454:AAG4dTJYB7e5N73wCfjtAcwe4bCb6bWiHdM'
 WEBHOOK_URL = f'https://pythonzapre.onrender.com/{TELEGRAM_TOKEN}'
 
 # PostgreSQL database URL
