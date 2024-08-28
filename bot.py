@@ -8,7 +8,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 # Telegram bot token and webhook URL
 TELEGRAM_TOKEN = '7342846547:AAE4mQ4OiMmEyYYwc8SPbN1u3Cf2idfCcxw'
-WEBHOOK_URL = 'https://pythonzapre.onrender.com/' + TELEGRAM_TOKEN
+WEBHOOK_URL = f'https://pythonzapre.onrender.com/{TELEGRAM_TOKEN}'
 
 # PostgreSQL database URL
 DATABASE_URL = 'postgresql://users_info_6gu3_user:RFH4r8MZg0bMII5ruj5Gly9fwdTLAfSV@dpg-cr6vbghu0jms73ffc840-a/users_info_6gu3'
@@ -31,7 +31,6 @@ async def start(update: Update, context: CallbackContext):
 # Handle user responses
 async def handle_message(update: Update, context: CallbackContext):
     text = update.message.text
-
     user_data = context.user_data
 
     if text == 'Create account':
@@ -96,13 +95,18 @@ def verify_password(username, password):
 
 # Set up webhook
 def set_webhook():
-    response = requests.get(f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}')
-    print("Webhook set response:", response.json())  # Debug: Print the response from Telegram API
+    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}'
+    response = requests.get(url)
+    print("Webhook set response:", response.json())  # Debug print
+
+@app.route('/')
+def home():
+    return 'Hello, World!'
 
 @app.route(f'/{TELEGRAM_TOKEN}', methods=['POST'])
 def webhook():
     update = request.get_json()
-    print("Received update:", update)  # Debug: Print the incoming update
+    print("Received update:", update)  # Debug print
     application.update_queue.put(Update.de_json(update, bot))
     return 'OK'
 
